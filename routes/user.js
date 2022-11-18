@@ -9,7 +9,34 @@ const JWT_SECRET="process.env.jwt";
 
 // console.log("sjgf")
 
-
+/**
+ * @swagger
+ * /api/authapi/signup:
+ *  post:
+ *    summary: create a todo by ID.
+ *    description: create the Specific todo
+ *    consumes:
+ *      - application/json
+ *    parameters:
+ *      - in: body
+ *        name: body
+ *        schema:
+ *           type: object
+ *           required:
+ *             - email
+ *             - password
+ *           properties:
+ *             email:
+ *               type: string
+ *             password:
+ *               type: string 
+ *    responses:
+ *      200:
+ *        description: Success
+ *        content:
+ *          schema:
+ *            type: object
+ */ 
 router.post("/signup", async (req, res) => {
   // console.log("sdf")
     try {
@@ -52,10 +79,59 @@ const verifyUserLogin = async (email,password)=>{
     }
 }
 
+
+/**
+ * @swagger
+ * /api/authapi/:
+ *  get:
+ *    summary: Returns a todo by ID.
+ *    description: Returns the Specific todo
+ *    parameters:
+ *      - name: accessToken
+ *        in: header
+ *        description: an authorization header
+ *        required: true
+ *        type: string 
+ *    responses:
+ *      '200':
+ *        description: A successful response
+ *        schema:
+ *          type: object
+ * 
+ */
 router.get("/", validateToken, (req, res) => {
     return res.status(200).json("user with valid access token")
   });
-  
+
+/**
+ * @swagger
+ * /api/authapi/login:
+ *  post:
+ *    summary: create a todo by ID.
+ *    description: create the Specific todo
+ *    consumes:
+ *      - application/json
+ *    parameters:
+ *      - in: body
+ *        name: body
+ *        schema:
+ *           type: object
+ *           required:
+ *             - email
+ *             - password
+ *           properties:
+ *             email:
+ *               type: string
+ *             password:
+ *               type: string 
+ *    responses:
+ *      200:
+ *        description: Success
+ *        content:
+ *          schema:
+ *            type: object
+ */  
+//
 router.post('/login',async(req,res)=>{
   console.log("login")
   const {email,password}=req.body;

@@ -27,7 +27,9 @@
     "otp-generator": "^1.1.0",
     "cookie-parser": "^1.4.5",
     "body-parser": "^1.19.0",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "swagger-jsdoc": "^6.2.5",
+    "swagger-ui-express": "^4.6.0"
   }, 
   "bugs": {
     "url": "https://github.com/Lets-coD/MongoNode_ToDo/issues"
