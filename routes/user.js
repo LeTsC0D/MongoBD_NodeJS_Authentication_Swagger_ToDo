@@ -6,7 +6,12 @@ const { validateToken } = require("../middlewares/AuthMiddleware");
 const jwt = require('jsonwebtoken');
 const JWT_SECRET="process.env.jwt";
 var otpGenerator = require('otp-generator');
+const Vonage = require('@vonage/server-sdk')
 
+const vonage = new Vonage({
+  apiKey: "2cb07ee0",
+  apiSecret: "HxJiai0ODI6tnqu0"
+})
 
 /**    
  * @swagger
@@ -22,12 +27,12 @@ var otpGenerator = require('otp-generator');
  *        schema:
  *           type: object
  *           required:
- *             - email
- *             - password
+ *             - username
+ *             - phonenumber
  *           properties:
- *             email:
+ *             username:
  *               type: string
- *             password:
+ *             phonenumber:
  *               type: string 
  *    responses:
  *      200:
@@ -41,41 +46,60 @@ router.post("/signup", async (req, res) => {
       
       //generate new password
       const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(req.body.password, salt);
       const OTP=otpGenerator.generate(6, { upperCase: false, specialChars: false });
       console.log(OTP)
       const hashedOtp = await bcrypt.hash(OTP, salt);
 
       //create new user
       const newUser = new User({
-        email: req.body.email,
-        password: ""+hashedPassword, 
+        username: req.body.username,
+        phonenumber: req.body.phonenumber, 
         otp:""+hashedOtp,
       });
       console.log(newUser)
       //save user and respond
       const user = await newUser.save();
-      return res.status(200).json(user);
+      const from = "Testing APIs"
+      var phonenumber=req.body.phonenumber;
+      console.log(phonenumber)
+      var to = "91"+phonenumber;   
+      const text = 'A test message sent '      
+      vonage.message.sendSms(from, to, text, (err, responseData) => {
+        if (err) {
+            console.log(err);
+            return res.status(500).json(err)
+        } else {
+            if(responseData.messages[0]['status'] === "0") {
+                console.log("Message sent successfully.");
+                return res.status(200).json(user);
+            } else {
+              
+                console.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+                return res.status(500).json(responseData)
+              }
+        }
+      })      
+      
     } catch (err) {
       return res.status(500).json(err)
     }
   });
 
-const verifyUserLogin = async (email,password)=>{
+const verifyUserLogin = async (phonenumber)=>{
     try {
       // console.log(User)
-        const user = await User.findOne({email:email})
+        const user = await User.findOne({phonenumber:phonenumber})
         console.log(user)
         if(!user){
             return {status:'error',error:'user not found'}
         }
-        if(await bcrypt.compare(password,user.password)){
+        if(phonenumber==user.phonenumber){
             // creating a JWT token
             // 10 minutes
-            token = jwt.sign({username:user.email,type:'user'},JWT_SECRET,{expiresIn: '600s'})
+            token = jwt.sign({phonenumber:user.phonenumber,type:'user'},JWT_SECRET,{expiresIn: '600s'})
             return {status:'ok',data:token,otp:user.otp}
         }
-        return {status:'error',error:'invalid password'}
+        return {status:'error',error:'invalid phonenumber'}
     } catch (error) {
         console.log(error);
         return {status:'error',error:'timed out'}
@@ -138,11 +162,11 @@ router.get("/", validateToken, (req, res) => {
  *            type: object
  */  
 //
-router.post('/login',async(req,res)=>{
-  console.log("login")
-  const {email,password,userotp}=req.body;
+router.post('/signin',async(req,res)=>{
+  console.log("signin")
+  const {phonenumber,userotp}=req.body;
   // we made a function to verify our user login
-  const response = await verifyUserLogin(email,password);
+  const response = await verifyUserLogin(phonenumber);
   if(response.status==='ok'){
       if(response.otp==userotp){
         // storing our JWT web token as a cookie in our browser
@@ -157,5 +181,5 @@ router.post('/login',async(req,res)=>{
   }
 })
 
-
+   
 module.exports = router;

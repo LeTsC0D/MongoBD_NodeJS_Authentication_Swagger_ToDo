@@ -29,7 +29,8 @@
     "body-parser": "^1.19.0",
     "jsonwebtoken": "^8.5.1",
     "swagger-jsdoc": "^6.2.5",
-    "swagger-ui-express": "^4.6.0"
+    "swagger-ui-express": "^4.6.0",
+    "@vonage/server-sdk": "^2.11.2"
   }, 
   "bugs": {
     "url": "https://github.com/Lets-coD/MongoNode_ToDo/issues"
