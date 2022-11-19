@@ -4,10 +4,7 @@ const TodoSchema = new mongoose.Schema(
   {
     task: {
       type: String,
-    },
-    otp: {
-        type: String,
-      },    
+    },  
     status: {
       type: String,
     },
