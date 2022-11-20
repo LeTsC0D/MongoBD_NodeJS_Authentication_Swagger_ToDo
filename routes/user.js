@@ -42,47 +42,52 @@ const vonage = new Vonage({
  *            type: object
  */ 
 router.post("/signup", async (req, res) => {
-    try {
-      
-      //generate new password
-      const salt = await bcrypt.genSalt(10);
-      const OTP=otpGenerator.generate(6, { upperCase: false, specialChars: false });
-      console.log(OTP)
-      const hashedOtp = await bcrypt.hash(OTP, salt);
 
-      //create new user
-      const newUser = new User({
-        username: req.body.username,
-        phonenumber: req.body.phonenumber, 
-        otp:""+hashedOtp,
-      });
-      console.log(newUser)
-      //save user and respond
-      const user = await newUser.save();
-      const from = "Testing APIs"
-      var phonenumber=req.body.phonenumber;
-      console.log(phonenumber)
-      var to = "91"+phonenumber;   
-      const text = 'A test message sent '      
-      vonage.message.sendSms(from, to, text, (err, responseData) => {
-        if (err) {
-            console.log(err);
-            return res.status(500).json(err)
-        } else {
-            if(responseData.messages[0]['status'] === "0") {
-                console.log("Message sent successfully.");
-                return res.status(200).json(user);
-            } else {
-              
-                console.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
-                return res.status(500).json(responseData)
-              }
-        }
-      })      
-      
-    } catch (err) {
-      return res.status(500).json(err)
-    }
+      if(tempuser==null){     
+        const from = "Testing APIs"
+        var phonenumber=req.body.phonenumber;
+        console.log(phonenumber)
+        var to = "91"+phonenumber;   
+        const text = 'A test message sent '      
+        vonage.message.sendSms(from, to, text, (err, responseData) => {
+          if (err) {
+              console.log(err);
+              return res.status(500).json(err)
+          } else {
+              if(responseData.messages[0]['status'] === "0") {
+                  console.log("Message sent successfully.");
+                  try {
+                    //generate new password
+                    const salt = await bcrypt.genSalt(10);
+                    const OTP=otpGenerator.generate(6, { upperCase: false, specialChars: false });
+                    console.log(OTP)
+                    const hashedOtp = await bcrypt.hash(OTP, salt);
+                    const tempuser = await User.findOne({phonenumber:phonenumber})                  
+                    //create new user
+                    const newUser = new User({
+                      username: req.body.username,
+                      phonenumber: req.body.phonenumber, 
+                      otp:""+hashedOtp,
+                    });
+                    console.log(newUser)    
+                    //save user and respond
+                    const user = await newUser.save();    
+                    return res.status(500).json("Signup Success")
+                    } catch (err) {
+                      return res.status(500).json(err)
+                    }          
+                  
+              } else {
+                
+                  console.log(`Message failed with error: ${responseData.messages[0]['error-text']}`);
+                  return res.status(500).json(responseData)
+                }
+          }
+        })      
+      }else{
+        return res.status(500).json("Phone Number is already Registered")
+      }
+    
   });
 
 const verifyUserLogin = async (phonenumber)=>{
@@ -144,16 +149,13 @@ router.get("/", validateToken, (req, res) => {
  *        schema:
  *           type: object
  *           required:
- *             - email
- *             - password
+ *             - phonenumber
  *             - userotp
  *           properties:
- *             email:
+ *             phonenumber:
  *               type: string
- *             password:
- *               type: string 
  *             userotp:
- *               type: string  
+ *               type: string 
  *    responses:
  *      200:
  *        description: Success
